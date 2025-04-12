@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Malfolgen Trainer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    .zeile {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input[type="number"] {
+      padding: 10px;
+      font-size: 18px;
+      width: 80px;
+    }
+    .aufgabe {
+      font-size: 40px;
+      margin-bottom: 10px;
+      white-space: pre-line;
+    }
+    .emoji {
+      font-size: 48px;
+      margin-top: 20px;
+    }
+    .timer, .punkte, .auswertung, .gesamtzeit, .fehlerliste {
+      font-size: 16px;
+      margin-top: 10px;
+      color: gray;
+    }
+    .pokal {
+      font-size: 80px;
+      margin-top: 30px;
+    }
+    .checkboxen {
+      margin-bottom: 20px;
+    }
+    .checkboxen label {
+      margin-right: 10px;
+      font-size: 18px;
+    }
+    .schwierigkeit {
+      margin-top: 10px;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Malfolgen Trainer</h1>
+
+  <div class="checkboxen">
+    <script>
+      for (let i = 1; i <= 10; i++) {
+        document.write(`<label><input type="checkbox" value="${i}" checked> ${i}</label>`);
+      }
+    </script>
+  </div>
+
+  <div class="schwierigkeit">
+    Schwierigkeit:
+    <select id="schwierigkeit">
+      <option value="1">1 (leicht)</option>
+      <option value="2">2 (mittel)</option>
+      <option value="3">3 (schwer)</option>
+    </select>
+  </div>
+
+  <button onclick="startSpiel()">Spiel starten</button>
+
+  <div class="aufgabe" id="aufgabe"></div>
+  <div class="zeile">
+    <input type="number" id="antwort" placeholder="Antwort" onkeydown="if(event.key === 'Enter')prüfen()" disabled />
+    <button onclick="prüfen()" disabled>Prüfen</button>
+  </div>
+  <div class="emoji" id="emoji"></div>
+  <div class="timer" id="zeit">Zeit: 0 Sek.</div>
+  <div class="punkte" id="punkte">Punkte: 0</div>
+  <div class="auswertung" id="auswertung"></div>
+  <div class="pokal" id="pokal"></div>
+  <div class="gesamtzeit" id="gesamtzeit"></div>
+  <div class="fehlerliste" id="fehlerliste"></div>
+
+  <script>
+    let faktor;
+    let zahl;
+    let lösung;
+    let startZeit;
+    let gesamtStartZeit;
+    let punkte = 0;
+    let richtige = 0;
+    let falsche = 0;
+    let aktuelleAufgabe = 0;
+    const maxAufgaben = 20;
+    let aktiveMalfolgen = [];
+    let schwierigkeit = 1;
+    let letzteFaktor = null;
+    let letzteZahl = null;
+    let falscheAufgaben = [];
+
+    function startSpiel() {
+      const checkboxes = document.querySelectorAll(".checkboxen input[type='checkbox']");
+      aktiveMalfolgen = Array.from(checkboxes).filter(c => c.checked).map(c => parseInt(c.value));
+      schwierigkeit = parseInt(document.getElementById("schwierigkeit").value);
+
+      if (aktiveMalfolgen.length === 0) {
+        alert("Bitte wähle mindestens eine Malfolge aus.");
+        return;
+      }
+
+      punkte = 0;
+      richtige = 0;
+      falsche = 0;
+      aktuelleAufgabe = 0;
+      falscheAufgaben = [];
+      document.getElementById("punkte").textContent = `Punkte: 0`;
+      document.getElementById("auswertung").textContent = "";
+      document.getElementById("pokal").textContent = "";
+      document.getElementById("gesamtzeit").textContent = "";
+      document.getElementById("fehlerliste").textContent = "";
+      document.getElementById("antwort").style.display = "inline";
+      document.querySelector("button[onclick='prüfen()']").style.display = "inline";
+      document.getElementById("antwort").disabled = false;
+      document.querySelector("button[onclick='prüfen()']").disabled = false;
+      letzteFaktor = null;
+      letzteZahl = null;
+      gesamtStartZeit = Date.now();
+      zufälligeAufgabe();
+    }
+
+    function zufälligeAufgabe() {
+      if (aktuelleAufgabe >= maxAufgaben) {
+        beendeSpiel();
+        return;
+      }
+
+      let neuerFaktor, neueZahl;
+      let maxZahl = 10;
+      if (schwierigkeit === 2) maxZahl = 20;
+      if (schwierigkeit === 3) maxZahl = 100;
+
+      do {
+        neuerFaktor = aktiveMalfolgen[Math.floor(Math.random() * aktiveMalfolgen.length)];
+        neueZahl = Math.floor(Math.random() * (maxZahl + 1));
+      } while (neuerFaktor === letzteFaktor && neueZahl === letzteZahl);
+
+      faktor = neuerFaktor;
+      zahl = neueZahl;
+      lösung = faktor * zahl;
+      letzteFaktor = faktor;
+      letzteZahl = zahl;
+
+      aktuelleAufgabe++;
+      document.getElementById("aufgabe").textContent = `Aufgabe ${aktuelleAufgabe}/${maxAufgaben}:
+\n\n${faktor} × ${zahl} =`;
+      document.getElementById("antwort").value = "";
+      document.getElementById("emoji").textContent = "";
+      document.getElementById("antwort").disabled = false;
+      document.getElementById("antwort").focus();
+      startZeit = Date.now();
+    }
+
+    function prüfen() {
+      const antwort = parseInt(document.getElementById("antwort").value);
+      const zeitSek = Math.round((Date.now() - startZeit) / 1000);
+      document.getElementById("zeit").textContent = `Zeit: ${zeitSek} Sek.`;
+
+      if (antwort === lösung) {
+        document.getElementById("emoji").textContent = "😊";
+        punkte++;
+        richtige++;
+      } else {
+        document.getElementById("emoji").textContent = "😢";
+        falsche++;
+        falscheAufgaben.push(`${faktor} × ${zahl} = ${lösung} (deine Antwort: ${antwort})`);
+      }
+
+      document.getElementById("punkte").textContent = `Punkte: ${punkte}`;
+      document.getElementById("antwort").disabled = true;
+      setTimeout(zufälligeAufgabe, 1500);
+    }
+
+    function beendeSpiel() {
+      document.getElementById("aufgabe").textContent = "Fertig!";
+      document.getElementById("antwort").style.display = "none";
+      document.querySelector("button[onclick='prüfen()']").style.display = "none";
+      document.getElementById("emoji").textContent = "";
+
+      document.getElementById("auswertung").innerHTML = 
+        `Du hast ${richtige} Aufgaben richtig und ${falsche} falsch gelöst.`;
+      document.getElementById("pokal").textContent = "🏆";
+
+      const gesamtZeitSek = Math.round((Date.now() - gesamtStartZeit) / 1000);
+      document.getElementById("gesamtzeit").textContent = `Gesamte benötigte Zeit: ${gesamtZeitSek} Sekunden.`;
+
+      if (falscheAufgaben.length > 0) {
+        document.getElementById("fehlerliste").innerHTML =
+          "<strong>Falsch gelöste Aufgaben:</strong><br>" + falscheAufgaben.join("<br>");
+      }
+    }
+  </script>
+
+</body>
+</html>
