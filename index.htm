@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Malfolgen Trainer</title>
   <style>
     body {
@@ -15,6 +16,7 @@
       align-items: center;
       gap: 10px;
       margin-bottom: 20px;
+      flex-wrap: wrap;
     }
     input[type="number"] {
       padding: 10px;
@@ -50,6 +52,41 @@
       margin-top: 10px;
       margin-bottom: 20px;
       font-size: 18px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      .aufgabe {
+        font-size: 28px;
+      }
+      input[type="number"] {
+        width: 60px;
+        font-size: 16px;
+      }
+      .checkboxen label {
+        display: inline-block;
+        width: 45%;
+        margin-bottom: 5px;
+      }
+    }
+
+    body.mobil {
+      padding: 10px;
+    }
+    body.mobil .aufgabe {
+      font-size: 28px;
+    }
+    body.mobil input[type="number"] {
+      width: 60px;
+      font-size: 16px;
+    }
+    body.mobil .checkboxen label {
+      display: inline-block;
+      width: 45%;
+      margin-bottom: 5px;
     }
   </style>
 </head>
@@ -90,6 +127,11 @@
   <div class="fehlerliste" id="fehlerliste"></div>
 
   <script>
+    // Gerätetyp erkennen
+    if (window.innerWidth <= 600) {
+      document.body.classList.add("mobil");
+    }
+
     let faktor;
     let zahl;
     let lösung;
